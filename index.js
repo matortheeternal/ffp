@@ -59,17 +59,19 @@ let parseSchema = function(stream, schema, store, key) {
 let parseFile = function(filePath, schema, store) {
     let stream = fs.createReadStream(filePath);
     stream.on('readable', () => {
+        if (stream.closed) return;
         Object.keys(schema).forEach(key => {
             log(`Parsing ${key}`);
             parseSchema(stream, schema[key], store, key);
         });
         let buf = stream.read();
+        stream.destroy();
         log(!buf ? 'File parsing completed, no leftover data.' :
             `File parsing completed, ${buf.length} unparsed bytes`);
     });
 };
 
-let addDataType = (name, reader) => dataTypes[name] = reader;
+let addDataType = (name, type) => dataTypes[name] = type;
 let getDataType = name => dataTypes[name];
 let addDataFormat = (name, format) => dataFormats[name] = format;
 let getDataFormat = name => dataFormats[name];
