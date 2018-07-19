@@ -24,7 +24,7 @@ describe('Parsing Arrays', () => {
         stream.on('readable', done);
     });
 
-    it('should parse arrays of numbers', () => {
+    it('should work with inline count', () => {
         parseEntity(stream, {
             type: 'array',
             count: {type: 'uint16'},
@@ -37,10 +37,16 @@ describe('Parsing Arrays', () => {
         expect(store.numbers).toEqual([10, 100, 1000]);
     });
 
-    it('should parse arrays of pascal strings', () => {
+    it('should work with countKey', () => {
+        parseEntity(stream, {
+            type: 'uint16',
+            storageKey: 'stringCount'
+        }, store);
+        expect(store.stringCount).toBe(6);
+
         parseEntity(stream, {
             type: 'array',
-            count: {type: 'uint16'},
+            countKey: 'stringCount',
             entry: {type: 'pascal string'},
             storageKey: 'strings'
         }, store);

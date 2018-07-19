@@ -9,15 +9,12 @@ let dataTypes = {
         read: stream => stream.read(1).readUInt8()
     },
     array: {
-        read: (stream, entity) => {
-            let entryType = getDataType(entity.entry.type),
-                countType = getDataType(entity.count.type);
+        read: (stream, entity, store) => {
+            let count = getArrayCount(stream, entity, store),
+                entryType = getDataType(entity.entry.type);
             if (!entryType)
                 throw new Error(`Data type ${entity.entry.type} not found.`);
-            if (!countType)
-                throw new Error(`Data type ${entity.count.type} not found.`);
-            let count = countType.read(stream, entity),
-                entries = [];
+            let entries = [];
             for (let i = 0; i < count; i++)
                 entries.push(entryType.read(stream, entity.entry));
             return entries;
@@ -43,6 +40,14 @@ let dataTypes = {
             return dataType.read(stream, targetCase, store);
         }
     }
+};
+
+let getArrayCount = function(stream, entity, store) {
+    if (entity.countKey) return store[entity.countKey];
+    let countType = getDataType(entity.count.type);
+    if (!countType)
+        throw new Error(`Data type ${entity.count.type} not found.`);
+    return countType.read(stream, entity);
 };
 
 let readUntil = function(stream, val, size = 1, methodName = 'readUInt8') {
