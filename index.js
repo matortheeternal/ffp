@@ -52,7 +52,7 @@ let parseEntity = function(stream, entity, store) {
     let dataType = getDataType(entity.type),
         value = dataType.read(stream, entity, store);
     if (entity.storageKey) store[entity.storageKey] = value;
-    if (entity.callback) entity.callback(value);
+    if (entity.callback) entity.callback(value, store);
 };
 
 let parseSchema = function(stream, schema, store, key) {
@@ -76,7 +76,7 @@ let parseFile = function(filePath, schema, store) {
         });
         let buf = stream.read();
         stream.destroy();
-        log(!buf ? 'File parsing completed, no leftover data.' :
+        log(!buf ? 'File parsing completed, no unparsed bytes.' :
             `File parsing completed, ${buf.length} unparsed bytes`);
     });
 };
