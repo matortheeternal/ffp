@@ -38,6 +38,16 @@ let dataTypes = {
     }
 };
 
+let readUntil = function(stream, val, size = 1, methodName = 'readUInt8') {
+    let bytes = [];
+    while (true) {
+        let chunk = stream.read(size);
+        if (chunk[methodName]() === val) break;
+        bytes.push(chunk);
+    }
+    return Buffer.concat(bytes);
+};
+
 let parseEntity = function(stream, entity, store) {
     let dataType = getDataType(entity.type),
         value = dataType.read(stream, entity, store);
@@ -78,6 +88,7 @@ let getDataFormat = name => dataFormats[name];
 let setLogCallback = fn => log = fn;
 
 module.exports = {
+    readUntil,
     parseFile, parseSchema, parseEntity,
     addDataType, getDataType,
     addDataFormat, getDataFormat,
