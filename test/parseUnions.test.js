@@ -4,10 +4,6 @@ let {parseEntity, addDataType, getDataType, addDataFormat} = require('../index')
 
 let unionsPath = path.resolve(__dirname, './fixtures/unions');
 
-const VARTYPE_UINT16 = 0,
-      VARTYPE_INT32 = 1,
-      VARTYPE_STRING = 2;
-
 describe('Parsing Unions', () => {
     let stream, store = {};
 
@@ -32,22 +28,16 @@ describe('Parsing Unions', () => {
             type: 'pascal string',
             storageKey: 'name'
         }, {
+            type: 'uint8',
+            storageKey: 'type'
+        }, {
             type: 'union',
             storageKey: 'data',
-            decide: (stream, entity, store) => {
-                let uint8 = getDataType('uint8');
-                store.type = uint8.read(stream, entity, store);
-                switch(store.type) {
-                    case VARTYPE_UINT16:
-                        let uint16 = getDataType('uint16');
-                        return uint16.read(stream, entity, store);
-                    case VARTYPE_INT32:
-                        let int32 = getDataType('int32');
-                        return int32.read(stream, entity, store);
-                    case VARTYPE_STRING:
-                        let pstr = getDataType('pascal string');
-                        return pstr.read(stream, entity, store);
-                }
+            switchKey: 'type',
+            cases: {
+                0: {type: 'uint16'},
+                1: {type: 'int32'},
+                2: {type: 'pascal string'}
             }
         }]);
 

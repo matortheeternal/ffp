@@ -33,7 +33,14 @@ let dataTypes = {
     },
     union: {
         read: (stream, entity, store) => {
-            return entity.decide(stream, entity, store);
+            let switchValue = store[entity.switchKey],
+                targetCase = entity.cases[switchValue];
+            if (!targetCase)
+                throw new Error(`Unknown union switch value ${switchValue}.`);
+            let dataType = getDataType(targetCase.type);
+            if (!dataType)
+                throw new Error(`Data type ${targetCase.type} not found.`);
+            return dataType.read(stream, targetCase, store);
         }
     }
 };
