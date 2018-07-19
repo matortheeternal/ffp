@@ -19,7 +19,7 @@ let dataTypes = {
             let count = countType.read(stream, entity),
                 entries = [];
             for (let i = 0; i < count; i++)
-                entries.push(entryType.read(stream, entity));
+                entries.push(entryType.read(stream, entity.entry));
             return entries;
         }
     },
