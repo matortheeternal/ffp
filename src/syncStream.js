@@ -8,10 +8,13 @@ class SyncStream {
 
     getReady() {
         let fiber = Fiber.current;
-        this._stream.once('readable', () => {
+        let ready = () => {
+            this._stream.removeListener('end', ready);
             this.ready = true;
             fiber.run();
-        });
+        };
+        this._stream.on('end', ready);
+        this._stream.once('readable', ready);
         Fiber.yield();
     }
 
@@ -25,10 +28,14 @@ class SyncStream {
     read(numBytes) {
         if (!this.ready) this.getReady();
         let buf = this._stream.read(numBytes);
-        if (buf) return buf;
+        if (buf || this.ended) return buf;
         // buffer isn't ready, let's wait
         this.ready = false;
         return this.read(numBytes);
+    }
+
+    get ended() {
+        return this._stream._readableState.ended;
     }
 }
 
