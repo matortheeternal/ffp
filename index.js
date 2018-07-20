@@ -1,6 +1,6 @@
-const fs = require('fs');
+const SyncStream = require('./src/syncStream');
 
-let log = console.log;
+let logger = console;
 
 let dataFormats = {};
 
@@ -31,13 +31,13 @@ let dataTypes = {
     union: {
         read: (stream, entity, store) => {
             let switchValue = store[entity.switchKey],
-                targetCase = entity.cases[switchValue];
-            if (!targetCase)
+                caseEntity = entity.cases[switchValue];
+            if (!caseEntity)
                 throw new Error(`Unknown union switch value ${switchValue}.`);
-            let dataType = getDataType(targetCase.type);
+            let dataType = getDataType(caseEntity.type);
             if (!dataType)
-                throw new Error(`Data type ${targetCase.type} not found.`);
-            return dataType.read(stream, targetCase, store);
+                throw new Error(`Data type ${caseEntity.type} not found.`);
+            return dataType.read(stream, caseEntity, store);
         }
     }
 };
@@ -60,36 +60,42 @@ let readUntil = function(stream, val, size = 1, methodName = 'readUInt8') {
     return Buffer.concat(bytes);
 };
 
+let testExpectedValue = function(entity, value) {
+    if (entity.expectedValue === value) return;
+    let msg = `Expected value ${entity.expectedValue}, found ${value}`;
+    if (entity.errorMessage) msg = `${entity.errorMessage}\n${msg}`;
+    throw new Error(msg);
+};
+
 let parseEntity = function(stream, entity, store) {
     let dataType = getDataType(entity.type),
         value = dataType.read(stream, entity, store);
     if (entity.storageKey) store[entity.storageKey] = value;
+    if (entity.expectedValue) testExpectedValue(entity, value);
     if (entity.callback) entity.callback(value, store);
 };
 
-let parseSchema = function(stream, schema, store, key) {
+let parseSchema = function(stream, schema, store = {}, key) {
     if (schema.constructor === Array) {
         if (key) store = store[key] = {};
         schema.forEach(entity => parseEntity(stream, entity, store));
     } else {
-        if (key && !schema.storageKey) schema.storageKey = key;
+        if (key && !schema.hasOwnProperty('storageKey'))
+            schema.storageKey = key;
         parseEntity(stream, schema, store);
     }
     return store;
 };
 
-let parseFile = function(filePath, schema, store) {
-    let stream = fs.createReadStream(filePath);
-    stream.on('readable', () => {
-        if (stream.closed) return;
+let parseFile = function(filePath, schema, dataCallback) {
+    let stream = new SyncStream(filePath),
+        store = {};
+    stream.onReady(() => {
         Object.keys(schema).forEach(key => {
-            log(`Parsing ${key}`);
+            logger.log(`Parsing ${key}`);
             parseSchema(stream, schema[key], store, key);
         });
-        let buf = stream.read();
-        stream.destroy();
-        log(!buf ? 'File parsing completed, no unparsed bytes.' :
-            `File parsing completed, ${buf.length} unparsed bytes`);
+        dataCallback(store);
     });
 };
 
@@ -97,12 +103,12 @@ let addDataType = (name, type) => dataTypes[name] = type;
 let getDataType = name => dataTypes[name];
 let addDataFormat = (name, format) => dataFormats[name] = format;
 let getDataFormat = name => dataFormats[name];
-let setLogCallback = fn => log = fn;
+let setLogger = newLogger => logger = newLogger;
 
 module.exports = {
     readUntil,
     parseFile, parseSchema, parseEntity,
     addDataType, getDataType,
     addDataFormat, getDataFormat,
-    setLogCallback
+    setLogger
 };

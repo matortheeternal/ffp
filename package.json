@@ -20,5 +20,8 @@
   "devDependencies": {
     "codecov": "^3.0.2",
     "jest": "^23.1.0"
+  },
+  "dependencies": {
+    "fibers": "^2.0.2"
   }
 }
