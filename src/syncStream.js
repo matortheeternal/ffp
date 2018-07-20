@@ -4,6 +4,7 @@ const Fiber = require('fibers'),
 class SyncStream {
     constructor(filePath) {
         this._stream = fs.createReadStream(filePath);
+        this._fileSize = fs.statSync(filePath).size;
     }
 
     getReady() {
@@ -32,6 +33,10 @@ class SyncStream {
         // buffer isn't ready, let's wait
         this.ready = false;
         return this.read(numBytes);
+    }
+
+    getRemainingBytes() {
+        return this._fileSize - this._stream.bytesRead;
     }
 
     get ended() {

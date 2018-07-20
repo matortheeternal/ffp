@@ -95,6 +95,8 @@ let parseFile = function(filePath, schema, dataCallback) {
             logger.log(`Parsing ${key}`);
             parseSchema(stream, schema[key], store, key);
         });
+        let numBytes = stream.getRemainingBytes();
+        logger.log(`Parsing "${filePath}" completed, ${numBytes} bytes unparsed.`);
         dataCallback(store);
     });
 };
