@@ -87,17 +87,21 @@ let parseSchema = function(stream, schema, store = {}, key) {
     return store;
 };
 
-let parseFile = function(filePath, schema, dataCallback) {
-    let stream = new SyncStream(filePath),
+let parseFile = function(filePath, schema, cb) {
+    let stream = new SyncReadableStream(filePath),
         store = {};
     stream.onReady(() => {
-        Object.keys(schema).forEach(key => {
-            logger.log(`Parsing ${key}`);
-            parseSchema(stream, schema[key], store, key);
-        });
-        let numBytes = stream.getRemainingBytes();
-        logger.log(`Parsing "${filePath}" completed, ${numBytes} bytes unparsed.`);
-        dataCallback(store);
+        try {
+            Object.keys(schema).forEach(key => {
+                logger.log(`Parsing ${key}`);
+                parseSchema(stream, schema[key], store, key);
+            });
+            let numBytes = stream.getRemainingBytes();
+            logger.log(`Parsing "${filePath}" completed, ${numBytes} bytes unparsed.`);
+            cb && cb(undefined, store);
+        } catch (x) {
+            cb && cb(x.message, store);
+        }
     });
 };
 

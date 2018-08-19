@@ -1,7 +1,8 @@
 let {parseFile, addDataType, getDataFormat, addDataFormat} = require('../index'),
     path = require('path');
 
-let iconPath = path.resolve(__dirname, './fixtures/icon.ico');
+let iconPath = path.resolve(__dirname, './fixtures/icon.ico'),
+    fakePath = path.resolve(__dirname, './fixtures/fake.ico');
 
 describe('Parsing Files', () => {
     const icoMagic = 0x00000100;
@@ -77,8 +78,11 @@ describe('Parsing Files', () => {
     });
 
     it('should parse icon files', done => {
-        let icoFormat = getDataFormat('ico');
-        parseFile(iconPath, icoFormat, iconFile => {
+        let icoFormat = getDataFormat('ico'),
+            start = new Date();
+        parseFile(iconPath, icoFormat, (err, iconFile) => {
+            console.log(`Completed parsing in ${new Date() - start}ms`);
+            expect(err).toBeUndefined();
             expect(iconFile.magic).toBe(icoMagic);
             expect(iconFile.images).toBeDefined();
             expect(iconFile.imageData).toBeUndefined();
@@ -87,6 +91,17 @@ describe('Parsing Files', () => {
             expect(iconFile.images[0].img).toBeDefined();
             expect(iconFile.images[0].header).toBeDefined();
             expect(iconFile.images[0].is_png).toBeDefined();
+            done();
+        });
+    });
+
+    it('should raise exception if magic doesn\'t match', done => {
+        let msg = `ICO magic does not match.\nExpected value ${icoMagic}, found 1633837924`,
+            icoFormat = getDataFormat('ico');
+        parseFile(fakePath, icoFormat, err => {
+            console.log(err);
+            expect(err).toBeDefined();
+            expect(err).toBe(msg);
             done();
         });
     });
