@@ -17,6 +17,11 @@ class SyncWriteableStream {
         Fiber.yield();
     }
 
+    onReady(callback) {
+        this.ready = true;
+        Fiber(callback).run();
+    }
+
     onFinish(callback) {
         this._stream.once('finish', callback);
     }

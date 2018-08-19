@@ -161,17 +161,22 @@ let writeSchema = function(stream, schema, data) {
     }
 };
 
-let writeFile = function(filePath, schema, data, callback) {
+let writeFile = function(filePath, schema, data, cb) {
     let stream = new SyncWriteableStream(filePath);
-    Object.keys(schema).forEach(key => {
-        logger.log(`Writing ${key}`);
-        writeSchema(stream, schema[key], data);
+    stream.onReady(() => {
+        try {
+            Object.keys(schema).forEach(key => {
+                logger.log(`Writing ${key}`);
+                writeSchema(stream, schema[key], data);
+            });
+        } catch(x) {
+            cb && cb(x.message);
+        }
     });
     stream.onFinish(() => {
         logger.log(`Writing "${filePath}" completed.`);
-        callback && callback();
+        cb && cb();
     });
-    stream.end();
 };
 
 let addDataType = (name, type) => dataTypes[name] = type;
