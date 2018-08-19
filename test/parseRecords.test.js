@@ -26,8 +26,10 @@ describe('Parsing Records', () => {
             callback: value => console.log(`Found ${value}`)
         }, {
             type: 'uint8',
-            callback: (value, store) => {
-                store.gender = value ? 'male' : 'female';
+            storageKey: 'gender',
+            transform: {
+                read: value => value ? 'male' : 'female',
+                write: data => data === 'male' ? 1 : 0
             }
         }, {
             type: 'uint16',

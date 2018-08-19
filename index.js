@@ -70,6 +70,7 @@ let testExpectedValue = function(entity, value) {
 let parseEntity = function(stream, entity, store) {
     let dataType = getDataType(entity.type),
         value = dataType.read(stream, entity, store);
+    if (entity.transform) value = entity.transform.read(value);
     if (entity.storageKey) store[entity.storageKey] = value;
     if (entity.expectedValue) testExpectedValue(entity, value);
     if (entity.callback) entity.callback(value, store);
