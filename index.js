@@ -1,4 +1,5 @@
-const SyncStream = require('./src/syncStream');
+let SyncReadableStream = require('./src/syncReadableStream'),
+    SyncWriteableStream = require('./src/syncWriteableStream');
 
 let logger = console;
 
@@ -6,11 +7,16 @@ let dataFormats = {};
 
 let dataTypes = {
     uint8: {
-        read: stream => stream.read(1).readUInt8()
+        read: stream => stream.read(1).readUInt8(),
+        write: (stream, entity, data) => {
+            let buf = Buffer.alloc(1);
+            buf.writeUInt8(data);
+            stream.write(buf);
+        }
     },
     array: {
         read: (stream, entity, store) => {
-            let count = getArrayCount(stream, entity, store),
+            let count = readArrayCount(stream, entity, store),
                 entryType = getDataType(entity.entry.type);
             if (!entryType)
                 throw new Error(`Data type ${entity.entry.type} not found.`);
@@ -18,6 +24,14 @@ let dataTypes = {
             for (let i = 0; i < count; i++)
                 entries.push(entryType.read(stream, entity.entry));
             return entries;
+        },
+        write: (stream, entity, data) => {
+            writeArrayCount(stream, entity, data);
+            let entryType = getDataType(entity.entry.type);
+            if (!entryType)
+                throw new Error(`Data type ${entity.entry.type} not found.`);
+            for (let i = 0; i < data.length; i++)
+                entryType.write(stream, entity.entry, data[i]);
         }
     },
     record: {
@@ -26,6 +40,12 @@ let dataTypes = {
             if (!format)
                 throw new Error(`Data format ${entity.format} not found.`);
             return parseSchema(stream, format, {})
+        },
+        write: (stream, entity, data) => {
+            let format = getDataFormat(entity.format);
+            if (!format)
+                throw new Error(`Data format ${entity.format} not found.`);
+            writeSchema(stream, format, data);
         }
     },
     union: {
@@ -38,16 +58,18 @@ let dataTypes = {
             if (!dataType)
                 throw new Error(`Data type ${caseEntity.type} not found.`);
             return dataType.read(stream, caseEntity, store);
+        },
+        write: (stream, entity, data, context) => {
+            let switchValue = context[entity.switchKey],
+                caseEntity = entity.cases[switchValue];
+            if (!caseEntity)
+                throw new Error(`Unknown union switch value ${switchValue}.`);
+            let dataType = getDataType(caseEntity.type);
+            if (!dataType)
+                throw new Error(`Data type ${caseEntity.type} not found.`);
+            dataType.write(stream, caseEntity, data);
         }
     }
-};
-
-let getArrayCount = function(stream, entity, store) {
-    if (entity.countKey) return store[entity.countKey];
-    let countType = getDataType(entity.count.type);
-    if (!countType)
-        throw new Error(`Data type ${entity.count.type} not found.`);
-    return countType.read(stream, entity);
 };
 
 let readUntil = function(stream, val, size = 1, methodName = 'readUInt8') {
@@ -58,6 +80,22 @@ let readUntil = function(stream, val, size = 1, methodName = 'readUInt8') {
         bytes.push(chunk);
     }
     return Buffer.concat(bytes);
+};
+
+let readArrayCount = function(stream, entity, store) {
+    if (entity.countKey) return store[entity.countKey];
+    let countType = getDataType(entity.count.type);
+    if (!countType)
+        throw new Error(`Data type ${entity.count.type} not found.`);
+    return countType.read(stream, entity);
+};
+
+let writeArrayCount = function(stream, entity, data) {
+    if (entity.countKey) return;
+    let countType = getDataType(entity.count.type);
+    if (!countType)
+        throw new Error(`Data type ${entity.count.type} not found.`);
+    return countType.write(stream, entity, data.length);
 };
 
 let testExpectedValue = function(entity, value) {
@@ -106,6 +144,36 @@ let parseFile = function(filePath, schema, cb) {
     });
 };
 
+let writeEntity = function(stream, entity, context) {
+    let dataType = getDataType(entity.type),
+        data = entity.storageKey && context[entity.storageKey];
+    if (entity.transform) data = entity.transform.write(data);
+    return dataType.write(stream, entity, data, context);
+};
+
+let writeSchema = function(stream, schema, data) {
+    if (schema.constructor === Array) {
+        schema.forEach(entity => {
+            writeEntity(stream, entity, data);
+        });
+    } else {
+        writeEntity(stream, schema, data);
+    }
+};
+
+let writeFile = function(filePath, schema, data, callback) {
+    let stream = new SyncWriteableStream(filePath);
+    Object.keys(schema).forEach(key => {
+        logger.log(`Writing ${key}`);
+        writeSchema(stream, schema[key], data);
+    });
+    stream.onFinish(() => {
+        logger.log(`Writing "${filePath}" completed.`);
+        callback && callback();
+    });
+    stream.end();
+};
+
 let addDataType = (name, type) => dataTypes[name] = type;
 let getDataType = name => dataTypes[name];
 let addDataFormat = (name, format) => dataFormats[name] = format;
@@ -113,8 +181,9 @@ let getDataFormat = name => dataFormats[name];
 let setLogger = newLogger => logger = newLogger;
 
 module.exports = {
-    readUntil,
+    readUntil, readArrayCount, writeArrayCount,
     parseFile, parseSchema, parseEntity,
+    writeFile, writeSchema, writeEntity,
     addDataType, getDataType,
     addDataFormat, getDataFormat,
     setLogger

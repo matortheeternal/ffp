@@ -1,10 +1,11 @@
 const Fiber = require('fibers'),
       fs = require('fs');
 
-class SyncStream {
+class SyncReadableStream {
     constructor(filePath) {
         this._stream = fs.createReadStream(filePath);
         this._fileSize = fs.statSync(filePath).size;
+        this._pos = 0;
     }
 
     getReady() {
@@ -27,9 +28,13 @@ class SyncStream {
     }
 
     read(numBytes) {
+        if (this.ended) throw new Error('The stream has ended.');
         if (!this.ready) this.getReady();
         let buf = this._stream.read(numBytes);
-        if (buf || this.ended) return buf;
+        if (buf) {
+            this._pos += numBytes;
+            return buf;
+        }
         // buffer isn't ready, let's wait
         this.ready = false;
         return this.read(numBytes);
@@ -44,4 +49,4 @@ class SyncStream {
     }
 }
 
-module.exports = SyncStream;
+module.exports = SyncReadableStream;
