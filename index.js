@@ -139,6 +139,7 @@ let parseFile = function(filePath, schema, cb) {
             logger.log(`Parsing "${filePath}" completed, ${numBytes} bytes unparsed.`);
             cb && cb(undefined, store);
         } catch (x) {
+            logger.error(x);
             cb && cb(x.message, store);
         }
     });
@@ -170,6 +171,7 @@ let writeFile = function(filePath, schema, data, cb) {
                 writeSchema(stream, schema[key], data);
             });
         } catch(x) {
+            logger.error(x);
             cb && cb(x.message);
         }
     });
