@@ -173,6 +173,7 @@ let writeFile = function(filePath, schema, data, cb) {
                 logger.log(`Writing ${key}`);
                 writeSchema(stream, schema[key], data, key);
             });
+            stream.end();
         } catch(x) {
             logger.error(x);
             cb && cb(x.message);
