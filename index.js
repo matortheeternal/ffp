@@ -152,12 +152,15 @@ let writeEntity = function(stream, entity, context) {
     return dataType.write(stream, entity, data, context);
 };
 
-let writeSchema = function(stream, schema, data) {
+let writeSchema = function(stream, schema, data, key) {
     if (schema.constructor === Array) {
+        if (key) data = data[key];
         schema.forEach(entity => {
             writeEntity(stream, entity, data);
         });
     } else {
+        if (key && !schema.hasOwnProperty('storageKey'))
+            schema.storageKey = key;
         writeEntity(stream, schema, data);
     }
 };
@@ -168,7 +171,7 @@ let writeFile = function(filePath, schema, data, cb) {
         try {
             Object.keys(schema).forEach(key => {
                 logger.log(`Writing ${key}`);
-                writeSchema(stream, schema[key], data);
+                writeSchema(stream, schema[key], data, key);
             });
         } catch(x) {
             logger.error(x);
