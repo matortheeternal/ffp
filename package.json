@@ -1,5 +1,5 @@
 {
-  "name": "ffp",
+  "name": "file-format-parser",
   "description": "File format parser which makes it easy to parse binary file formats through data schemas.",
   "version": "1.0.0",
   "author": "Mator",

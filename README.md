@@ -1,4 +1,4 @@
-# ffp ![](https://travis-ci.org/matortheeternal/ffp.svg?branch=master) [![codecov](https://codecov.io/gh/matortheeternal/ffp/branch/master/graph/badge.svg)](https://codecov.io/gh/matortheeternal/ffp)
+# file-format-parser ![](https://travis-ci.org/matortheeternal/ffp.svg?branch=master) [![codecov](https://codecov.io/gh/matortheeternal/ffp/branch/master/graph/badge.svg)](https://codecov.io/gh/matortheeternal/ffp)
 File format parser which makes it easy to parse binary file formats through data schemas.
 
 The primary goal of `ffp` is to make it easy to make file format parsers and writers.  This is done through defining sequences of entities (data formats) and types (data readers/writers).
@@ -8,13 +8,13 @@ The primary goal of `ffp` is to make it easy to make file format parsers and wri
 ## installation
 
 ```
-npm i ffp --save
+npm i file-format-parser --save
 ``` 
 
 ## usage
 
 ```js
-let ffp = require('ffp');
+let ffp = require('file-format-parser');
 
 // ffp.addDataType - adds a data type to ffp
 ffp.addDataType('string', {
