@@ -7,8 +7,15 @@
   "main": "index.js",
   "license": "MIT",
   "keywords": [
+    "file",
+    "format",
     "parser",
-    "streams"
+    "streams",
+    "binary",
+    "parsing",
+    "structure",
+    "reverse",
+    "engineering"
   ],
   "jest": {
     "coverageDirectory": "./coverage/",
