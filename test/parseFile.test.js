@@ -76,9 +76,8 @@ describe('Parsing Files', () => {
     });
 
     it('should parse icon files', done => {
-        let icoFormat = getDataFormat('ico'),
-            start = new Date();
-        parseFile(iconPath, icoFormat, (err, iconFile) => {
+        let start = new Date();
+        parseFile(iconPath, 'ico', (err, iconFile) => {
             console.log(`Completed parsing in ${new Date() - start}ms`);
             expect(err).toBeUndefined();
             expect(iconFile.magic).toBe(icoMagic);
@@ -94,10 +93,8 @@ describe('Parsing Files', () => {
     });
 
     it('should raise exception if magic doesn\'t match', done => {
-        let msg = `ICO magic does not match.\nExpected value ${icoMagic}, found 1633837924`,
-            icoFormat = getDataFormat('ico');
-        parseFile(fakePath, icoFormat, err => {
-            console.log(err);
+        let msg = `ICO magic does not match.\nExpected value ${icoMagic}, found 1633837924`;
+        parseFile(fakePath, 'ico', err => {
             expect(err).toBeDefined();
             expect(err).toBe(msg);
             done();

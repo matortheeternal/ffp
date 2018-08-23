@@ -101,16 +101,30 @@ let writeFile = function(filePath, schema, data, cb) {
 
 let addDataType = (name, type) => dataTypes[name] = type;
 let getDataType = name => dataTypes[name];
+let resolveEntityType = entity => {
+    let entityType = getDataType(entity.type);
+    if (!entityType)
+        throw new Error(`Data type ${entity.type} not found.`);
+    return entityType;
+};
+
 let addDataFormat = (name, format) => dataFormats[name] = format;
 let getDataFormat = name => dataFormats[name];
+let resolveEntityFormat = entity => {
+    let entityFormat = getDataFormat(entity.format);
+    if (!entityFormat)
+        throw new Error(`Data format ${entity.format} not found.`);
+    return entityFormat;
+};
+
 let setLogger = newLogger => logger = newLogger;
 
 module.exports = {
     readUntil, readArrayCount, writeArrayCount,
     parseFile, parseSchema, parseEntity,
     writeFile, writeSchema, writeEntity,
-    addDataType, getDataType,
-    addDataFormat, getDataFormat,
+    addDataType, getDataType, resolveEntityType,
+    addDataFormat, getDataFormat, resolveEntityFormat,
     setLogger
 };
 

@@ -97,10 +97,10 @@ describe('Writing Files', () => {
     });
 
     it('should read and write binary-identical icon files', done => {
-        let icoFormat = getDataFormat('ico');
-        parseFile(inputPath, icoFormat, (err, iconFile) => {
+        parseFile(inputPath, 'ico', (err, iconFile) => {
             expect(err).toBeUndefined();
-            writeFile(outputPath, icoFormat, iconFile, () => {
+            writeFile(outputPath, 'ico', iconFile, err => {
+                expect(err).toBeUndefined();
                 let input = fs.readFileSync(inputPath),
                     output = fs.readFileSync(outputPath);
                 expect(input).toBeDefined();
