@@ -59,22 +59,20 @@ describe('Parsing Files', () => {
             storageKey: 'ofs_img'
         }]);
 
-        addDataFormat('ico', {
-            magic: {
-                type: 'uint32',
-                expectedValue: icoMagic,
-                errorMessage: 'ICO magic does not match.'
-            },
-            images: {
-                type: 'array',
-                count: {type: 'uint16le'},
-                entry: {type: 'record', format: 'IconDirEntry'}
-            },
-            imageData: {
-                type: 'image blobs',
-                storageKey: null
-            }
-        });
+        addDataFormat('ico', [{
+            type: 'uint32',
+            expectedValue: icoMagic,
+            errorMessage: 'ICO magic does not match.',
+            storageKey: 'magic'
+        }, {
+            type: 'array',
+            count: {type: 'uint16le'},
+            entry: {type: 'record', format: 'IconDirEntry'},
+            storageKey: 'images'
+        }, {
+            type: 'image blobs',
+            storageKey: null
+        }]);
     });
 
     it('should parse icon files', done => {

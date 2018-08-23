@@ -82,20 +82,16 @@ let readUntil = function(stream, val, size = 1, methodName = 'readUInt8') {
     return Buffer.concat(bytes);
 };
 
-let readArrayCount = function(stream, entity, store) {
-    if (entity.countKey) return store[entity.countKey];
-    let countType = getDataType(entity.count.type);
-    if (!countType)
-        throw new Error(`Data type ${entity.count.type} not found.`);
-    return countType.read(stream, entity);
+let readArrayCount = function(stream, entity, context) {
+    if (entity.countKey) return context[entity.countKey];
+    let countType = resolveEntityType(entity.count);
+    return countType.read(stream, entity.count, context);
 };
 
-let writeArrayCount = function(stream, entity, data) {
+let writeArrayCount = function(stream, entity, data, context) {
     if (entity.countKey) return;
-    let countType = getDataType(entity.count.type);
-    if (!countType)
-        throw new Error(`Data type ${entity.count.type} not found.`);
-    return countType.write(stream, entity, data.length);
+    let countType = resolveEntityType(entity.count);
+    return countType.write(stream, entity.count, data.length, context);
 };
 
 let testExpectedValue = function(entity, value) {
@@ -105,42 +101,37 @@ let testExpectedValue = function(entity, value) {
     throw new Error(msg);
 };
 
-let parseEntity = function(stream, entity, store) {
-    let dataType = getDataType(entity.type),
-        value = dataType.read(stream, entity, store);
-    if (entity.transform) value = entity.transform.read(value);
-    if (entity.storageKey) store[entity.storageKey] = value;
-    if (entity.expectedValue) testExpectedValue(entity, value);
-    if (entity.callback) entity.callback(value, store);
+let loadSchema = function(schema) {
+    return typeof schema === 'string' ? getDataFormat(schema) : schema;
 };
 
-let parseSchema = function(stream, schema, store = {}, key) {
-    if (schema.constructor === Array) {
-        if (key) store = store[key] = {};
-        schema.forEach(entity => parseEntity(stream, entity, store));
-    } else {
-        if (key && !schema.hasOwnProperty('storageKey'))
-            schema.storageKey = key;
-        parseEntity(stream, schema, store);
-    }
-    return store;
+let parseEntity = function(stream, entity, context) {
+    let dataType = resolveEntityType(entity),
+        value = dataType.read(stream, entity, context);
+    if (entity.transform) value = entity.transform.read(value);
+    if (entity.storageKey) context[entity.storageKey] = value;
+    if (entity.expectedValue) testExpectedValue(entity, value);
+    if (entity.callback) entity.callback(value, context);
+};
+
+let parseSchema = function(stream, schema, context = {}) {
+    schema.forEach(entity => parseEntity(stream, entity, context));
+    return context;
 };
 
 let parseFile = function(filePath, schema, cb) {
+    schema = loadSchema(schema);
     let stream = new SyncReadableStream(filePath),
-        store = {};
+        data = {};
     stream.onReady(() => {
         try {
-            Object.keys(schema).forEach(key => {
-                logger.log(`Parsing ${key}`);
-                parseSchema(stream, schema[key], store, key);
-            });
+            parseSchema(stream, schema, data);
             let numBytes = stream.getRemainingBytes();
             logger.log(`Parsing "${filePath}" completed, ${numBytes} bytes unparsed.`);
-            cb && cb(undefined, store);
+            cb && cb(undefined, data);
         } catch (x) {
             logger.error(x);
-            cb && cb(x.message, store);
+            cb && cb(x.message, data);
         }
     });
 };
@@ -152,27 +143,17 @@ let writeEntity = function(stream, entity, context) {
     return dataType.write(stream, entity, data, context);
 };
 
-let writeSchema = function(stream, schema, data, key) {
-    if (schema.constructor === Array) {
-        if (key) data = data[key];
-        schema.forEach(entity => {
-            writeEntity(stream, entity, data);
-        });
-    } else {
-        if (key && !schema.hasOwnProperty('storageKey'))
-            schema.storageKey = key;
-        writeEntity(stream, schema, data);
-    }
+let writeSchema = function(stream, schema, data) {
+    schema.forEach(entity => writeEntity(stream, entity, data));
 };
 
 let writeFile = function(filePath, schema, data, cb) {
+    schema = loadSchema(schema);
     let stream = new SyncWriteableStream(filePath);
     stream.onReady(() => {
         try {
-            Object.keys(schema).forEach(key => {
-                logger.log(`Writing ${key}`);
-                writeSchema(stream, schema[key], data, key);
-            });
+            writeSchema(stream, schema, data);
+            logger.log(`Writing "${filePath}" completed, ${stream._pos} bytes written.`);
             stream.end();
         } catch(x) {
             logger.error(x);
