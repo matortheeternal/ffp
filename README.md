@@ -42,11 +42,9 @@ ffp.addDataFormat('MyFileType', [{
     storageKey: 'aString'
 }]);
 
-ffp.parseFile('path/to/file', 'MyFileType', (err, data) => {
-    if (err) return;
-    console.log(data.someBytes); // array of uint8 numbers
-    console.log(data.aString);   // a string parsed after the array
-});
+let data = ffp.parseFile('path/to/file', 'MyFileType');
+console.log(data.someBytes); // array of uint8 numbers
+console.log(data.aString);   // a string parsed after the array
 ```
 
 See the tests for more thorough code examples.  E.g. [writeFile.test.js](https://github.com/matortheeternal/ffp/tree/master/test/writeFile.test.js) shows how to read and write `ico` files.
@@ -83,25 +81,20 @@ In `ffp`, a schema is just a sequence of entities.  Schemas can be nested inside
 
 ### `ffp.parseFile(filePath, schema, cb)`
 
-Loads and parses the file at `filePath` according to `schema`.  Calls the callback `cb` once parsing is completed.
+Loads and parses the file at `filePath` according to `schema`.  Returns the parsed data once parsing is completed.
 
 **Arguments:**  
 - `filePath` - Path to the file to load and parse.
 - `schema` - Name of the schema to use when parsing the file or the schema itself.
-- `cb` - Callback to execute when parsing is completed.  Arguments:
-    - `err` - Undefined if parsing was successful, else it will contain an error message.
-    - `data` - Object containing the data that was stored when parsing the file, according to the schema's structure and entity `storageKey` properties.
 
 ### `ffp.writeFile`
 
-Writes a file to `filePath` according to `schema` and `data`.  Calls the callback `cb` once writing is completed.
+Writes a file to `filePath` according to `schema` and `data`.
 
 **Arguments:**  
 - `filePath` - Path to the file to write to disk.
 - `schema` - Name of the schema to use when parsing the file or the schema itself.
 - `data` - Data structure to write to disk.  Should have every property expected by the `schema`.
-- `cb` - Callback to execute when writing is completed.  Arguments:
-    - `err` - Undefined if writing the file was successful, else it will contain an error message.
 
 ### `ffp.addDataType`
 

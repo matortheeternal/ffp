@@ -52,21 +52,14 @@ let parseSchema = function(stream, schema, context = {}) {
     return context;
 };
 
-let parseFile = function(filePath, schema, cb) {
+let parseFile = function(filePath, schema) {
     schema = loadSchema(schema);
     let stream = new SyncReadableStream(filePath),
         data = {};
-    stream.onReady(() => {
-        try {
-            parseSchema(stream, schema, data);
-            let numBytes = stream.getRemainingBytes();
-            logger.log(`Parsing "${filePath}" completed, ${numBytes} bytes unparsed.`);
-            cb && cb(undefined, data);
-        } catch (x) {
-            logger.error(x);
-            cb && cb(x.message, data);
-        }
-    });
+    parseSchema(stream, schema, data);
+    let numBytes = stream.getRemainingBytes();
+    logger.log(`Parsing "${filePath}" completed, ${numBytes} bytes unparsed.`);
+    return data;
 };
 
 let writeEntity = function(stream, entity, context) {
@@ -80,23 +73,12 @@ let writeSchema = function(stream, schema, data) {
     schema.forEach(entity => writeEntity(stream, entity, data));
 };
 
-let writeFile = function(filePath, schema, data, cb) {
+let writeFile = function(filePath, schema, data) {
     schema = loadSchema(schema);
     let stream = new SyncWriteableStream(filePath);
-    stream.onReady(() => {
-        try {
-            writeSchema(stream, schema, data);
-            logger.log(`Writing "${filePath}" completed, ${stream._pos} bytes written.`);
-            stream.end();
-        } catch(x) {
-            logger.error(x);
-            cb && cb(x.message);
-        }
-    });
-    stream.onFinish(() => {
-        logger.log(`Writing "${filePath}" completed.`);
-        cb && cb();
-    });
+    writeSchema(stream, schema, data);
+    logger.log(`Writing "${filePath}" completed, ${stream._pos} bytes written.`);
+    stream.end();
 };
 
 let addDataType = (name, type) => dataTypes[name] = type;

@@ -1,4 +1,4 @@
-let {parseFile, addDataType, getDataFormat, addDataFormat} = require('../index'),
+let {parseFile, addDataType, addDataFormat} = require('../index'),
     path = require('path');
 
 let iconPath = path.resolve(__dirname, './fixtures/icon.ico'),
@@ -75,29 +75,26 @@ describe('Parsing Files', () => {
         }]);
     });
 
-    it('should parse icon files', done => {
-        let start = new Date();
-        parseFile(iconPath, 'ico', (err, iconFile) => {
-            console.log(`Completed parsing in ${new Date() - start}ms`);
-            expect(err).toBeUndefined();
-            expect(iconFile.magic).toBe(icoMagic);
-            expect(iconFile.images).toBeDefined();
-            expect(iconFile.imageData).toBeUndefined();
-            expect(iconFile.images.constructor).toBe(Array);
-            expect(iconFile.images.length).toBe(9);
-            expect(iconFile.images[0].img).toBeDefined();
-            expect(iconFile.images[0].header).toBeDefined();
-            expect(iconFile.images[0].is_png).toBeDefined();
-            done();
-        });
+    it('should parse icon files', () => {
+        let start = new Date(),
+            iconFile = parseFile(iconPath, 'ico');
+        console.log(`Completed parsing in ${new Date() - start}ms`);
+        expect(iconFile.magic).toBe(icoMagic);
+        expect(iconFile.images).toBeDefined();
+        expect(iconFile.imageData).toBeUndefined();
+        expect(iconFile.images.constructor).toBe(Array);
+        expect(iconFile.images.length).toBe(9);
+        expect(iconFile.images[0].img).toBeDefined();
+        expect(iconFile.images[0].header).toBeDefined();
+        expect(iconFile.images[0].is_png).toBeDefined();
     });
 
-    it('should raise exception if magic doesn\'t match', done => {
+    it('should raise exception if magic doesn\'t match', () => {
         let msg = `ICO magic does not match.\nExpected value ${icoMagic}, found 1633837924`;
-        parseFile(fakePath, 'ico', err => {
-            expect(err).toBeDefined();
-            expect(err).toBe(msg);
-            done();
-        });
+        try {
+            parseFile(fakePath, 'ico');
+        } catch (x) {
+            expect(x.message).toBe(msg);
+        }
     });
 });

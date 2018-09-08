@@ -96,22 +96,16 @@ describe('Writing Files', () => {
         }]);
     });
 
-    it('should read and write binary-identical icon files', done => {
-        parseFile(inputPath, 'ico', (err, iconFile) => {
-            expect(err).toBeUndefined();
-            writeFile(outputPath, 'ico', iconFile, err => {
-                expect(err).toBeUndefined();
-                let input = fs.readFileSync(inputPath),
-                    output = fs.readFileSync(outputPath);
-                expect(input).toBeDefined();
-                expect(output).toBeDefined();
-                expect(Buffer.isBuffer(input)).toBe(true);
-                expect(Buffer.isBuffer(output)).toBe(true);
-                expect(input.length).toBe(output.length);
-                expect(input).toEqual(output);
-                done();
-            });
-            done();
-        });
+    it('should read and write binary-identical icon files', () => {
+        let iconFile = parseFile(inputPath, 'ico');
+        writeFile(outputPath, 'ico', iconFile);
+        let input = fs.readFileSync(inputPath),
+            output = fs.readFileSync(outputPath);
+        expect(input).toBeDefined();
+        expect(output).toBeDefined();
+        expect(Buffer.isBuffer(input)).toBe(true);
+        expect(Buffer.isBuffer(output)).toBe(true);
+        expect(input.length).toBe(output.length);
+        expect(input).toEqual(output);
     });
 });

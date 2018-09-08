@@ -1,44 +1,17 @@
-const Fiber = require('fibers'),
-      fs = require('fs');
+const fs = require('fs');
 
 class SyncWriteableStream {
     constructor(filePath) {
-        this._stream = fs.createWriteStream(filePath);
-        this.ended = false;
-        this._pos = 0;
-    }
-
-    getReady() {
-        let fiber = Fiber.current;
-        this._stream.once('drain', () => {
-            this.ready = true;
-            fiber.run();
-        });
-        Fiber.yield();
-    }
-
-    onReady(callback) {
-        this.ready = true;
-        Fiber(callback).run();
-    }
-
-    onFinish(callback) {
-        this._stream.once('finish', callback);
+        this._filePath = filePath;
+        this._buffer = Buffer.alloc(0);
     }
 
     write(buf) {
-        if (this.ended) throw new Error('The stream has ended.');
-        let ok = this._stream.write(buf);
-        if (!ok) this.getReady();
-        if (ok) {
-            this._pos += buf.length;
-            return buf;
-        }
+        this._buffer = Buffer.concat([this._buffer, buf]);
     }
 
     end() {
-        this.ended = true;
-        this._stream.end();
+        fs.writeFileSync(this._filePath, this._buffer);
     }
 }
 
