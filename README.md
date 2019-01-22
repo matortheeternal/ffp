@@ -69,6 +69,11 @@ In `ffp`, a schema is just a sequence of entities.  Schemas can be nested inside
 `ffp` provides several data types out of the box to help you get started parsing files.  The data types provided are for standard use cases and aren't intended to be complete.
 
 - `uint8` - 1 byte unsigned integer.
+- `uint16` - 2 byte unsigned integer.  (endian type)
+- `uint32` - 4 byte unsigned integer.  (endian type)
+- `int16`- 2 byte signed integer.  (endian type)
+- `int32` - 4 byte signed integer.  (endian type)
+- `float` - 4 byte floating point number.  (endian type)
 - `array` - Array of any other type.  The size of the array is expected before the contents of the array.  The type used for the size can any integer type.  Entity properties:
     - `count` - entity for the count.
     - `countKey` - key where the count can be found, if it was parsed as a separate entity.  Takes precedence over `count` (provide one or the other).
@@ -78,6 +83,30 @@ In `ffp`, a schema is just a sequence of entities.  Schemas can be nested inside
 - `union` - Switches between parsing different data types based on a previously parsed value. Entity properties:
     - `switchKey` - The key to the data to "switch" on.  Resolved relative to the entities data storage context.
     - `cases` - Object which is used to determine the entity to parse.  Keys should correspond to possible data switch values.  Values should be entity objects.
+
+### data reader functions
+
+Data reader functions are passed to `ffp.addDataType` and `ffp.addEndianType` and are used to read a data type from a stream.  They use the following arguments:
+
+- `stream` - The `SyncReadableStream` to read the data from.  Use `stream.read(n)` to read `n` bytes from the stream (returns a `Buffer`).
+- `entity` - The current entity you're reading data for.
+- `context` - The current data storage context of the reader.
+
+### data writer functions
+
+Data writer functions are passed to `ffp.addDataType` and `ffp.addEndianType` and are used to write a data type to a stream.  They use the following arguments:
+
+- `stream` - The `SyncWriteableStream` to write the data to.  Use `stream.write(buf)` to write the Buffer `buf` to the stream.
+- `entity` - The current entity you're writing data for.
+- `data` - The data you are writing to the stream.
+- `context` - The current data storage context of the writer.
+
+### `ffp.setEndianness(endianness)`
+
+Sets the [endianness](https://en.wikipedia.org/wiki/Endianness) to be used by endian types.
+
+**Arguments:**
+- `endianness` - `'LE'` for Little Endian or `'BE'` for Big Endian.
 
 ### `ffp.parseFile(filePath, schema, cb)`
 
@@ -103,15 +132,22 @@ Adds a data type to `ffp`.
 **Arguments:**  
 - `name` - Unique string identifier for the data type.
 - `type` - Object which contains a data reader and a data writer for the type.  Properties:
-    - `read` - Called to read the data type from a stream.  Arguments:
-        - `stream` - The `SyncReadableStream` to read the data from.  Use `stream.read(n)` to read `n` bytes from the stream (returns a `Buffer`).
-        - `entity` - The current entity you're reading data for.
-        - `context` - The current data storage context of the reader.
-    - `write` - Called to write the data type to the stream.  Arguments:
-        - `stream` - The `SyncWriteableStream` to write the data to.  Use `stream.write(buf)` to write the Buffer `buf` to the stream.
-        - `entity` - The current entity you're writing data for.
-        - `data` - The data you are writing to the stream.
-        - `context` - The current data storage context of the writer.
+    - `read` - [Data reader function](#data-reader-function) called to read the data type from a stream.
+    - `write` - [Data writer function](#data-writer-function) called to write the data type to the stream.
+
+### `ffp.addEndianType`
+
+Adds an endian data type to `ffp`.
+
+**Arguments:**  
+- `name` - Unique string identifier for the data type.
+- `endianType` - Object which contains little endian and big endian data readers and a data writers for the type.  Properties:
+    - `read` - Object containing data readers for the type.  Properties:
+        - `LE` - [Data reader function](#data-reader-function) called to read data from the stream in little endian byte order.
+        - `BE` - [Data reader function](#data-reader-function) called to read data from the stream in big endian byte order.
+    - `write` - Object containing data writers for the type.  Properties:
+        - `LE` - [Data writer function](#data-writer-function) called to write data to the stream in little endian byte order.
+        - `BE` - [Data writer function](#data-writer-function) called to write data to the stream in big endian byte order.
 
 ### `ffp.getDataType`
 
