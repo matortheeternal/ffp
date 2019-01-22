@@ -5,6 +5,7 @@ module.exports = function(ffp) {
             let buf = Buffer.alloc(1);
             buf.writeUInt8(data);
             stream.write(buf);
+            return buf;
         }
     };
 

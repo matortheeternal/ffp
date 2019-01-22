@@ -41,8 +41,8 @@ module.exports = {
     },
     int16: {
         read: {
-            LE: stream => stream.read(4).readInt16LE(),
-            BE: stream => stream.read(4).readInt16BE()
+            LE: stream => stream.read(2).readInt16LE(),
+            BE: stream => stream.read(2).readInt16BE()
         },
         write: {
             LE: (stream, entity, data) => {
@@ -67,7 +67,7 @@ module.exports = {
         write: {
             LE: (stream, entity, data) => {
                 let buf = Buffer.alloc(4);
-                buf.writeUInt32LE(data);
+                buf.writeInt32LE(data);
                 stream.write(buf);
                 return buf;
             },
