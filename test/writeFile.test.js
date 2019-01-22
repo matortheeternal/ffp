@@ -6,7 +6,8 @@ let inputPath = path.resolve(__dirname, './fixtures/icon.ico'),
     outputPath = path.resolve(__dirname, './output/icon.ico');
 
 describe('Writing Files', () => {
-    const icoMagic = 0x00000100;
+    const ICO_MAGIC = 0x00000100;
+    const PNG_HEADER = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
 
     beforeAll(() => {
         ffp.setEndianness('LE');
@@ -19,8 +20,6 @@ describe('Writing Files', () => {
                 stream.write(buf);
             }
         });
-
-        const PNG_HEADER = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
 
         ffp.addDataType('image blobs', {
             read: (stream, entity, store) => {
@@ -66,7 +65,7 @@ describe('Writing Files', () => {
 
         ffp.addDataFormat('ico', [{
             type: 'uint32be',
-            expectedValue: icoMagic,
+            expectedValue: ICO_MAGIC,
             errorMessage: 'ICO magic does not match.',
             storageKey: 'magic'
         }, {
@@ -85,6 +84,7 @@ describe('Writing Files', () => {
         ffp.writeFile(outputPath, 'ico', iconFile);
         let input = fs.readFileSync(inputPath),
             output = fs.readFileSync(outputPath);
+
         expect(input).toBeDefined();
         expect(output).toBeDefined();
         expect(Buffer.isBuffer(input)).toBe(true);

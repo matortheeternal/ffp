@@ -28,6 +28,7 @@ describe('Parsing Arrays', () => {
             entry: {type: 'uint16'},
             storageKey: 'numbers'
         }, store);
+
         expect(store.numbers).toBeDefined();
         expect(store.numbers.constructor).toBe(Array);
         expect(store.numbers.length).toBe(3);
@@ -47,6 +48,7 @@ describe('Parsing Arrays', () => {
             entry: {type: 'pascal string'},
             storageKey: 'strings'
         }, store);
+
         expect(store.strings).toBeDefined();
         expect(store.strings.constructor).toBe(Array);
         expect(store.strings.length).toBe(6);

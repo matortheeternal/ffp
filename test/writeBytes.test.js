@@ -25,6 +25,7 @@ describe('Writing Bytes', () => {
             type: 'bytes',
             storageKey: 'bytes'
         }, data);
+
         expect(output).toBeDefined();
         expect(Buffer.isBuffer(output)).toBe(true);
         expect(output.length).toBe(4);

@@ -1,4 +1,5 @@
 let ffp = require('../index'),
+    {testOutput} = require('./testHelpers'),
     path = require('path'),
     fs = require('fs');
 
@@ -14,22 +15,6 @@ describe('Writing Arrays', () => {
     beforeAll(() => {
         ffp.setEndianness('BE');
 
-        // using special array type here so we can test the
-        // output buffer without having to read the file
-        ffp.addDataType('test array', {
-            write: (stream, entity, data) => {
-                let buffers = [],
-                    countBuf = ffp.writeArrayCount(stream, entity, data),
-                    entryType = ffp.getDataType(entity.entry.type);
-                if (countBuf) buffers.push(countBuf);
-                if (!entryType)
-                    throw new Error(`Data type ${entity.entry.type} not found.`);
-                for (let i = 0; i < data.length; i++)
-                    buffers.push(entryType.write(stream, entity.entry, data[i]));
-                return Buffer.concat(buffers);
-            }
-        });
-
         ffp.addDataType('pascal string', {
             write: (stream, entity, data) => {
                 let buf = Buffer.alloc(2 + data.length);
@@ -39,7 +24,9 @@ describe('Writing Arrays', () => {
                 return buf;
             }
         });
+    });
 
+    beforeEach(() => {
         stream = fs.createWriteStream(arraysPath);
     });
 
@@ -50,22 +37,9 @@ describe('Writing Arrays', () => {
         return numbers;
     };
 
-    it('should work with inline count', () => {
-        let output = ffp.writeEntity(stream, {
-            type: 'test array',
-            count: {type: 'uint16'},
-            entry: {type: 'uint16'},
-            storageKey: 'numbers'
-        }, data);
-        expect(output).toBeDefined();
-        expect(Buffer.isBuffer(output)).toBe(true);
-        expect(output.length).toBe(8);
-        expect(readNumberArray(output)).toEqual(data.numbers);
-    });
-
-    let readStringArray = function(buf) {
+    let readStringArray = function(buf, start) {
         let strings = [],
-            i = 0;
+            i = start;
         while (i < buf.length) {
             let len = buf.readUInt16BE(i);
             i += 2;
@@ -75,22 +49,41 @@ describe('Writing Arrays', () => {
         return strings;
     };
 
-    it('should work with countKey', () => {
-        let output = ffp.writeEntity(stream, {
+    it('should work with inline count', done => {
+        ffp.writeEntity(stream, {
+            type: 'array',
+            count: {type: 'uint16'},
+            entry: {type: 'uint16'},
+            storageKey: 'numbers'
+        }, data);
+
+        testOutput(stream, output => {
+            expect(Buffer.isBuffer(output)).toBe(true);
+            expect(output.length).toBe(8);
+            expect(readNumberArray(output)).toEqual(data.numbers);
+            done();
+        });
+    });
+
+    it('should work with countKey', done => {
+        ffp.writeEntity(stream, {
             type: 'uint16',
             storageKey: 'stringCount'
         }, data);
-        expect(output.readUInt16BE()).toBe(6);
 
-        output = ffp.writeEntity(stream, {
-            type: 'test array',
+        ffp.writeEntity(stream, {
+            type: 'array',
             countKey: 'stringCount',
             entry: {type: 'pascal string'},
             storageKey: 'strings'
         }, data);
-        expect(output).toBeDefined();
-        expect(Buffer.isBuffer(output)).toBe(true);
-        expect(output.length).toBe(34);
-        expect(readStringArray(output)).toEqual(data.strings);
+
+        testOutput(stream, output => {
+            expect(Buffer.isBuffer(output)).toBe(true);
+            expect(output.length).toBe(36);
+            expect(output.readUInt16BE()).toBe(6);
+            expect(readStringArray(output, 2)).toEqual(data.strings);
+            done();
+        });
     });
 });

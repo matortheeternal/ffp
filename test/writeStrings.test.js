@@ -45,33 +45,36 @@ describe('Writing Strings', () => {
         stream = fs.createWriteStream(stringsPath);
     });
 
-    it('should parse utf8 strings', () => {
+    it('should write utf8 strings', () => {
         let output = ffp.writeEntity(stream, {
             type: 'utf8 string',
             storageKey: 'str'
         }, data);
+
         expect(output).toBeDefined();
         expect(Buffer.isBuffer(output)).toBe(true);
         expect(output.length).toBe(13);
         expect(output.slice(0, -1).toString('utf8')).toBe(data.str);
     });
 
-    it('should parse pascal strings', () => {
+    it('should write pascal strings', () => {
         let output = ffp.writeEntity(stream, {
             type: 'pascal string',
             storageKey: 'pstr'
         }, data);
+
         expect(output).toBeDefined();
         expect(Buffer.isBuffer(output)).toBe(true);
         expect(output.length).toBe(14);
         expect(output.slice(2).toString('ascii')).toBe(data.pstr);
     });
 
-    it('should parse ucs2 strings', () => {
+    it('should write ucs2 strings', () => {
         let output = ffp.writeEntity(stream, {
             type: 'ucs2 string',
             storageKey: 'wstr'
         }, data);
+
         expect(output).toBeDefined();
         expect(Buffer.isBuffer(output)).toBe(true);
         expect(output.length).toBe(26);

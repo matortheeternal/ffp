@@ -25,6 +25,7 @@ let numbersPath = path.resolve(__dirname, './output/numbers');
                 type: 'uint8',
                 storageKey: 'uint8'
             }, data);
+
             expect(output).toBeDefined();
             expect(Buffer.isBuffer(output)).toBe(true);
             expect(output.length).toBe(1);
@@ -36,6 +37,7 @@ let numbersPath = path.resolve(__dirname, './output/numbers');
                 type: 'uint16',
                 storageKey: 'uint16'
             }, data);
+
             expect(output).toBeDefined();
             expect(Buffer.isBuffer(output)).toBe(true);
             expect(output.length).toBe(2);
@@ -48,6 +50,7 @@ let numbersPath = path.resolve(__dirname, './output/numbers');
                 type: 'uint32',
                 storageKey: 'uint32'
             }, data);
+
             expect(output).toBeDefined();
             expect(Buffer.isBuffer(output)).toBe(true);
             expect(output.length).toBe(4);
@@ -60,6 +63,7 @@ let numbersPath = path.resolve(__dirname, './output/numbers');
                 type: 'int16',
                 storageKey: 'int16'
             }, data);
+
             expect(output).toBeDefined();
             expect(Buffer.isBuffer(output)).toBe(true);
             expect(output.length).toBe(2);
@@ -72,6 +76,7 @@ let numbersPath = path.resolve(__dirname, './output/numbers');
                 type: 'int32',
                 storageKey: 'int32'
             }, data);
+
             expect(output).toBeDefined();
             expect(Buffer.isBuffer(output)).toBe(true);
             expect(output.length).toBe(4);
@@ -84,6 +89,7 @@ let numbersPath = path.resolve(__dirname, './output/numbers');
                 type: 'float',
                 storageKey: 'float'
             }, data);
+
             expect(output).toBeDefined();
             expect(Buffer.isBuffer(output)).toBe(true);
             expect(output.length).toBe(4);

@@ -1,4 +1,5 @@
 let ffp = require('../index'),
+    {testOutput} = require('./testHelpers'),
     path = require('path'),
     fs = require('fs');
 
@@ -24,17 +25,6 @@ describe('Writing Records', () => {
     beforeAll(() => {
         ffp.setEndianness('BE');
 
-        // using special uint8 type here so we can test the
-        // output buffer without having to read the file
-        ffp.addDataType('test uint8', {
-            write: (stream, entity, data) => {
-                let buf = Buffer.alloc(1);
-                buf.writeUInt8(data);
-                stream.write(buf);
-                return buf;
-            }
-        });
-
         ffp.addDataType('pascal string', {
             write: (stream, entity, data) => {
                 let buf = Buffer.alloc(2 + data.length);
@@ -45,50 +35,11 @@ describe('Writing Records', () => {
             }
         });
 
-        // using special array type here so we can test the
-        // output buffer without having to read the file
-        ffp.addDataType('test array', {
-            write: (stream, entity, data) => {
-                let buffers = [],
-                    countBuf = ffp.writeArrayCount(stream, entity, data),
-                    entryType = ffp.getDataType(entity.entry.type);
-                if (countBuf) buffers.push(countBuf);
-                if (!entryType)
-                    throw new Error(`Data type ${entity.entry.type} not found.`);
-                for (let i = 0; i < data.length; i++)
-                    buffers.push(entryType.write(stream, entity.entry, data[i]));
-                return Buffer.concat(buffers);
-            }
-        });
-
-        let writeSchema = function(stream, schema, data) {
-            let buffers = [];
-            if (schema.constructor === Array) {
-                schema.forEach(entity => {
-                    buffers.push(ffp.writeEntity(stream, entity, data));
-                });
-            } else {
-                buffers.push(ffp.writeEntity(stream, schema, data));
-            }
-            return Buffer.concat(buffers);
-        };
-
-        // using special record type here so we can test the
-        // output buffer without having to read the file
-        ffp.addDataType('test record', {
-            write: (stream, entity, data) => {
-                let format = ffp.getDataFormat(entity.format);
-                if (!format)
-                    throw new Error(`Data format ${entity.format} not found.`);
-                return writeSchema(stream, format, data);
-            }
-        });
-
         ffp.addDataFormat('Person', [{
             type: 'pascal string',
             storageKey: 'name'
         }, {
-            type: 'test uint8',
+            type: 'uint8',
             storageKey: 'gender',
             transform: {
                 read: value => value ? 'male' : 'female',
@@ -98,7 +49,10 @@ describe('Writing Records', () => {
             type: 'uint16',
             storageKey: 'age'
         }]);
+    });
 
+    beforeEach(() => {
+        fs.unlinkSync(recordsPath);
         stream = fs.createWriteStream(recordsPath);
     });
 
@@ -116,16 +70,19 @@ describe('Writing Records', () => {
         return people;
     };
 
-    it('should write arrays of records', () => {
-        let output = ffp.writeEntity(stream, {
-            type: 'test array',
+    it('should write arrays of records', done => {
+        ffp.writeEntity(stream, {
+            type: 'array',
             count: {type: 'uint16'},
-            entry: {type: 'test record', format: 'Person'},
+            entry: {type: 'record', format: 'Person'},
             storageKey: 'people'
         }, data);
-        expect(output).toBeDefined();
-        expect(Buffer.isBuffer(output)).toBe(true);
-        expect(output.length).toBe(42);
-        expect(readPeople(output)).toEqual(data.people);
+
+        testOutput(stream, output => {
+            expect(Buffer.isBuffer(output)).toBe(true);
+            expect(output.length).toBe(42);
+            expect(readPeople(output)).toEqual(data.people);
+            done();
+        });
     });
 });
