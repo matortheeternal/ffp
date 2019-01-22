@@ -12,7 +12,7 @@ describe('Parsing Records', () => {
 
         ffp.addDataType('pascal string', {
             read: stream => {
-                let len = ffp.uint16.read(stream);
+                let len = ffp.getDataType('uint16').read(stream);
                 return stream.read(len).toString('ascii');
             }
         });

@@ -1,10 +1,11 @@
 let SyncReadableStream = require('./src/syncReadableStream'),
-    SyncWriteableStream = require('./src/syncWriteableStream'),
-    endianTypes = require('./src/endianTypes');
+    SyncWriteableStream = require('./src/syncWriteableStream');
 
+let _endianness = 'LE';
 let logger = console;
 let dataFormats = {};
 let dataTypes = {};
+let endianTypes = {};
 
 let readUntil = function(stream, val, size = 1, methodName = 'readUInt8') {
     let bytes = [];
@@ -100,12 +101,22 @@ let resolveEntityFormat = entity => {
     return entityFormat;
 };
 
+let addEndianType = function(name, type) {
+    endianTypes[name] = type;
+    addDataType(name, {
+        read: type.read[_endianness],
+        write: type.write[_endianness]
+    });
+};
+
 let setEndianness = function(endianness) {
     if (endianness !== 'LE' && endianness !== 'BE')
         throw new Error('Endianness must be BE or LE.');
+    if (_endianness === endianness) return;
+    _endianness = endianness;
     Object.keys(endianTypes).forEach(key => {
-        ffp[key].read = endianTypes[key].read[endianness];
-        ffp[key].write = endianTypes[key].write[endianness];
+        dataTypes[key].read = endianTypes[key].read[endianness];
+        dataTypes[key].write = endianTypes[key].write[endianness];
     });
 };
 
@@ -117,18 +128,11 @@ let ffp = {
     writeFile, writeSchema, writeEntity,
     addDataType, getDataType, resolveEntityType,
     addDataFormat, getDataFormat, resolveEntityFormat,
-    setEndianness, setLogger
+    addEndianType, setEndianness, setLogger
 };
 
-// initialize endianness to LE
-Object.keys(endianTypes).forEach(key => {
-    ffp[key] = {
-        read: endianTypes[key].read.LE,
-        write: endianTypes[key].write.LE
-    }
-});
-
-// load base data types
+// load data types
 require('./src/baseDataTypes')(ffp);
+require('./src/endianDataType')(ffp);
 
 module.exports = ffp;

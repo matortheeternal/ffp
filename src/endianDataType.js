@@ -1,5 +1,5 @@
-module.exports = {
-    uint16: {
+module.exports = function(ffp) {
+    ffp.addEndianType('uint16', {
         read: {
             LE: stream => stream.read(2).readUInt16LE(),
             BE: stream => stream.read(2).readUInt16BE()
@@ -18,8 +18,9 @@ module.exports = {
                 return buf;
             }
         }
-    },
-    uint32: {
+    });
+
+    ffp.addEndianType('uint32', {
         read: {
             LE: stream => stream.read(4).readUInt32LE(),
             BE: stream => stream.read(4).readUInt32BE()
@@ -38,8 +39,9 @@ module.exports = {
                 return buf;
             }
         }
-    },
-    int16: {
+    });
+
+    ffp.addEndianType('int16', {
         read: {
             LE: stream => stream.read(2).readInt16LE(),
             BE: stream => stream.read(2).readInt16BE()
@@ -58,8 +60,9 @@ module.exports = {
                 return buf;
             }
         }
-    },
-    int32: {
+    });
+
+    ffp.addEndianType('int32', {
         read: {
             LE: stream => stream.read(4).readInt32LE(),
             BE: stream => stream.read(4).readInt32BE()
@@ -78,8 +81,9 @@ module.exports = {
                 return buf;
             }
         }
-    },
-    float: {
+    });
+
+    ffp.addEndianType('float', {
         read: {
             LE: stream => stream.read(4).readFloatLE(),
             BE: stream => stream.read(4).readFloatBE()
@@ -98,5 +102,5 @@ module.exports = {
                 return buf;
             }
         }
-    }
+    });
 };
