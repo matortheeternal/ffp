@@ -1,5 +1,6 @@
 let SyncReadableStream = require('./src/syncReadableStream'),
-    SyncWriteableStream = require('./src/syncWriteableStream');
+    SyncWriteableStream = require('./src/syncWriteableStream'),
+    endianTypes = require('./src/endianTypes');
 
 let logger = console;
 let dataFormats = {};
@@ -99,15 +100,35 @@ let resolveEntityFormat = entity => {
     return entityFormat;
 };
 
+let setEndianness = function(endianness) {
+    if (endianness !== 'LE' && endianness !== 'BE')
+        throw new Error('Endianness must be BE or LE.');
+    Object.keys(endianTypes).forEach(key => {
+        ffp[key].read = endianTypes[key].read[endianness];
+        ffp[key].write = endianTypes[key].write[endianness];
+    });
+};
+
 let setLogger = newLogger => logger = newLogger;
 
-module.exports = {
+let ffp = {
     readUntil, readArrayCount, writeArrayCount,
     parseFile, parseSchema, parseEntity,
     writeFile, writeSchema, writeEntity,
     addDataType, getDataType, resolveEntityType,
     addDataFormat, getDataFormat, resolveEntityFormat,
-    setLogger
+    setEndianness, setLogger
 };
 
-require('./src/baseDataTypes')(module.exports);
+// initialize endianness to LE
+Object.keys(endianTypes).forEach(key => {
+    ffp[key] = {
+        read: endianTypes[key].read.LE,
+        write: endianTypes[key].write.LE
+    }
+});
+
+// load base data types
+require('./src/baseDataTypes')(ffp);
+
+module.exports = ffp;

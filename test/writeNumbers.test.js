@@ -1,4 +1,4 @@
-let {writeEntity, addDataType} = require('../index'),
+let ffp = require('../index'),
     path = require('path'),
     fs = require('fs');
 
@@ -13,39 +13,14 @@ describe('Writing Numbers', () => {
     };
 
     beforeAll(() => {
+        ffp.setEndianness('BE');
+
         // using special uint8 type here so we can test the
         // output buffer without having to read the file
-        addDataType('test uint8', {
+        ffp.addDataType('test uint8', {
             write: (stream, entity, data) => {
                 let buf = Buffer.alloc(1);
                 buf.writeUInt8(data);
-                stream.write(buf);
-                return buf;
-            }
-        });
-
-        addDataType('uint16', {
-            write: (stream, entity, data) => {
-                let buf = Buffer.alloc(2);
-                buf.writeUInt16BE(data);
-                stream.write(buf);
-                return buf;
-            }
-        });
-
-        addDataType('uint32', {
-            write: (stream, entity, data) => {
-                let buf = Buffer.alloc(4);
-                buf.writeUInt32BE(data);
-                stream.write(buf);
-                return buf;
-            }
-        });
-
-        addDataType('int32', {
-            write: (stream, entity, data) => {
-                let buf = Buffer.alloc(4);
-                buf.writeInt32BE(data);
                 stream.write(buf);
                 return buf;
             }
@@ -55,7 +30,7 @@ describe('Writing Numbers', () => {
     });
 
     it('should write uint8 values', () => {
-        let output = writeEntity(stream, {
+        let output = ffp.writeEntity(stream, {
             type: 'test uint8',
             storageKey: 'uint8'
         }, data);
@@ -66,7 +41,7 @@ describe('Writing Numbers', () => {
     });
 
     it('should write uint16 values', () => {
-        let output = writeEntity(stream, {
+        let output = ffp.writeEntity(stream, {
             type: 'uint16',
             storageKey: 'uint16'
         }, data);
@@ -77,7 +52,7 @@ describe('Writing Numbers', () => {
     });
 
     it('should write uint32 values', () => {
-        let output = writeEntity(stream, {
+        let output = ffp.writeEntity(stream, {
             type: 'uint32',
             storageKey: 'uint32'
         }, data);
@@ -88,7 +63,7 @@ describe('Writing Numbers', () => {
     });
 
     it('should write int32 values', () => {
-        let output = writeEntity(stream, {
+        let output = ffp.writeEntity(stream, {
             type: 'int32',
             storageKey: 'int32'
         }, data);

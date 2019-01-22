@@ -1,4 +1,4 @@
-let {parseEntity, addDataType} = require('../index'),
+let ffp = require('../index'),
     path = require('path'),
     fs = require('fs');
 
@@ -8,28 +8,13 @@ describe('Parsing Numbers', () => {
     let stream, store = {};
 
     beforeAll(done => {
-        addDataType('uint8', {
-            read: stream => stream.read(1).readUInt8()
-        });
-
-        addDataType('uint16', {
-            read: stream => stream.read(2).readUInt16BE()
-        });
-
-        addDataType('uint32', {
-            read: stream => stream.read(4).readUInt32BE()
-        });
-
-        addDataType('int32', {
-            read: stream => stream.read(4).readInt32BE()
-        });
-
+        ffp.setEndianness('BE');
         stream = fs.createReadStream(numbersPath);
         stream.on('readable', done);
     });
 
     it('should read uint8 values', () => {
-        parseEntity(stream, {
+        ffp.parseEntity(stream, {
             type: 'uint8',
             storageKey: 'uint8'
         }, store);
@@ -38,7 +23,7 @@ describe('Parsing Numbers', () => {
     });
 
     it('should read uint16 values', () => {
-        parseEntity(stream, {
+        ffp.parseEntity(stream, {
             type: 'uint16',
             storageKey: 'uint16'
         }, store);
@@ -47,7 +32,7 @@ describe('Parsing Numbers', () => {
     });
 
     it('should read uint32 values', () => {
-        parseEntity(stream, {
+        ffp.parseEntity(stream, {
             type: 'uint32',
             storageKey: 'uint32'
         }, store);
@@ -56,7 +41,7 @@ describe('Parsing Numbers', () => {
     });
 
     it('should read int32 values', () => {
-        parseEntity(stream, {
+        ffp.parseEntity(stream, {
             type: 'int32',
             storageKey: 'int32'
         }, store);

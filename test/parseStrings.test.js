@@ -1,4 +1,4 @@
-let {parseEntity, addDataType, getDataType, readUntil} = require('../index'),
+let ffp = require('../index'),
     path = require('path'),
     fs = require('fs');
 
@@ -8,28 +8,25 @@ describe('Parsing Strings', () => {
     let stream, store = {};
 
     beforeAll(done => {
-        addDataType('uint16', {
-            read: stream => stream.read(2).readUInt16BE()
-        });
+        ffp.setEndianness('BE');
 
-        addDataType('utf8 string', {
+        ffp.addDataType('utf8 string', {
             read: stream => {
-                let buf = readUntil(stream, 0x00);
+                let buf = ffp.readUntil(stream, 0x00);
                 return buf.toString('utf8');
             }
         });
 
-        addDataType('pascal string', {
+        ffp.addDataType('pascal string', {
             read: stream => {
-                let uint16 = getDataType('uint16'),
-                    len = uint16.read(stream);
+                let len = ffp.uint16.read(stream);
                 return stream.read(len).toString('ascii');
             }
         });
 
-        addDataType('ucs2 string', {
+        ffp.addDataType('ucs2 string', {
             read: stream => {
-                let buf = readUntil(stream, 0x00, 2, 'readUInt16BE');
+                let buf = ffp.readUntil(stream, 0x00, 2, 'readUInt16BE');
                 return buf.toString('ucs2');
             }
         });
@@ -39,7 +36,7 @@ describe('Parsing Strings', () => {
     });
 
     it('should parse utf8 strings', () => {
-        parseEntity(stream, {
+        ffp.parseEntity(stream, {
             type: 'utf8 string',
             storageKey: 'str'
         }, store);
@@ -50,7 +47,7 @@ describe('Parsing Strings', () => {
     });
 
     it('should parse pascal strings', () => {
-        parseEntity(stream, {
+        ffp.parseEntity(stream, {
             type: 'pascal string',
             storageKey: 'pstr'
         }, store);
@@ -61,7 +58,7 @@ describe('Parsing Strings', () => {
     });
 
     it('should parse ucs2 strings', () => {
-        parseEntity(stream, {
+        ffp.parseEntity(stream, {
             type: 'ucs2 string',
             storageKey: 'wstr'
         }, store);

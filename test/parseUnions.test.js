@@ -1,4 +1,4 @@
-let {parseEntity, addDataType, getDataType, addDataFormat} = require('../index'),
+let ffp = require('../index'),
     path = require('path'),
     fs = require('fs');
 
@@ -8,23 +8,16 @@ describe('Parsing Unions', () => {
     let stream, store = {};
 
     beforeAll(done => {
-        addDataType('uint16', {
-            read: stream => stream.read(2).readUInt16BE()
-        });
+        ffp.setEndianness('BE');
 
-        addDataType('int32', {
-            read: stream => stream.read(4).readInt32BE()
-        });
-
-        addDataType('pascal string', {
+        ffp.addDataType('pascal string', {
             read: stream => {
-                let uint16 = getDataType('uint16'),
-                    len = uint16.read(stream);
+                let len = ffp.uint16.read(stream);
                 return stream.read(len).toString('ascii');
             }
         });
 
-        addDataFormat('Variable', [{
+        ffp.addDataFormat('Variable', [{
             type: 'pascal string',
             storageKey: 'name'
         }, {
@@ -46,7 +39,7 @@ describe('Parsing Unions', () => {
     });
 
     it('should parse unions', () => {
-        parseEntity(stream, {
+        ffp.parseEntity(stream, {
             type: 'array',
             count: {type: 'uint16'},
             entry: {type: 'record', format: 'Variable'},

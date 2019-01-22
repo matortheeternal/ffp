@@ -1,4 +1,4 @@
-let {parseFile, addDataType, addDataFormat} = require('../index'),
+let ffp = require('../index'),
     path = require('path');
 
 let iconPath = path.resolve(__dirname, './fixtures/icon.ico'),
@@ -8,21 +8,15 @@ describe('Parsing Files', () => {
     const icoMagic = 0x00000100;
 
     beforeAll(() => {
-        addDataType('uint32', {
+        ffp.setEndianness('LE');
+
+        ffp.addDataType('uint32be', {
             read: stream => stream.read(4).readUInt32BE()
-        });
-
-        addDataType('uint32le', {
-            read: stream => stream.read(4).readUInt32LE()
-        });
-
-        addDataType('uint16le', {
-            read: stream => stream.read(2).readUInt16LE()
         });
 
         const PNG_HEADER = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
 
-        addDataType('image blobs', {
+        ffp.addDataType('image blobs', {
             read: (stream, entity, store) => {
                 store.images.forEach(image => {
                     //console.log('Parsing image ', image.len_img);
@@ -33,7 +27,7 @@ describe('Parsing Files', () => {
             }
         });
 
-        addDataFormat('IconDirEntry', [{
+        ffp.addDataFormat('IconDirEntry', [{
             type: 'uint8',
             storageKey: 'width'
         }, {
@@ -46,27 +40,27 @@ describe('Parsing Files', () => {
             type: 'uint8',
             storageKey: 'reserved'
         }, {
-            type: 'uint16le',
+            type: 'uint16',
             storageKey: 'num_planes'
         }, {
-            type: 'uint16le',
+            type: 'uint16',
             storageKey: 'bpp'
         }, {
-            type: 'uint32le',
+            type: 'uint32',
             storageKey: 'len_img'
         }, {
-            type: 'uint32le',
+            type: 'uint32',
             storageKey: 'ofs_img'
         }]);
 
-        addDataFormat('ico', [{
-            type: 'uint32',
+        ffp.addDataFormat('ico', [{
+            type: 'uint32be',
             expectedValue: icoMagic,
             errorMessage: 'ICO magic does not match.',
             storageKey: 'magic'
         }, {
             type: 'array',
-            count: {type: 'uint16le'},
+            count: {type: 'uint16'},
             entry: {type: 'record', format: 'IconDirEntry'},
             storageKey: 'images'
         }, {
@@ -77,7 +71,7 @@ describe('Parsing Files', () => {
 
     it('should parse icon files', () => {
         let start = new Date(),
-            iconFile = parseFile(iconPath, 'ico');
+            iconFile = ffp.parseFile(iconPath, 'ico');
         console.log(`Completed parsing in ${new Date() - start}ms`);
         expect(iconFile.magic).toBe(icoMagic);
         expect(iconFile.images).toBeDefined();
@@ -92,7 +86,7 @@ describe('Parsing Files', () => {
     it('should raise exception if magic doesn\'t match', () => {
         let msg = `ICO magic does not match.\nExpected value ${icoMagic}, found 1633837924`;
         try {
-            parseFile(fakePath, 'ico');
+            ffp.parseFile(fakePath, 'ico');
         } catch (x) {
             expect(x.message).toBe(msg);
         }

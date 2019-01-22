@@ -1,4 +1,4 @@
-let {parseEntity, addDataType, getDataType, addDataFormat} = require('../index'),
+let ffp = require('../index'),
     path = require('path'),
     fs = require('fs');
 
@@ -8,19 +8,16 @@ describe('Parsing Records', () => {
     let stream, store = {};
 
     beforeAll(done => {
-        addDataType('uint16', {
-            read: stream => stream.read(2).readUInt16BE()
-        });
+        ffp.setEndianness('BE');
 
-        addDataType('pascal string', {
+        ffp.addDataType('pascal string', {
             read: stream => {
-                let uint16 = getDataType('uint16'),
-                    len = uint16.read(stream);
+                let len = ffp.uint16.read(stream);
                 return stream.read(len).toString('ascii');
             }
         });
 
-        addDataFormat('Person', [{
+        ffp.addDataFormat('Person', [{
             type: 'pascal string',
             storageKey: 'name',
             callback: value => console.log(`Found ${value}`)
@@ -41,7 +38,7 @@ describe('Parsing Records', () => {
     });
 
     it('should parse arrays of records', () => {
-        parseEntity(stream, {
+        ffp.parseEntity(stream, {
             type: 'array',
             count: {type: 'uint16'},
             entry: {type: 'record', format: 'Person'},

@@ -1,12 +1,19 @@
 module.exports = function(ffp) {
-    ffp.addDataType('uint8', {
+    ffp.uint8 = {
         read: stream => stream.read(1).readUInt8(),
         write: (stream, entity, data) => {
             let buf = Buffer.alloc(1);
             buf.writeUInt8(data);
             stream.write(buf);
         }
-    });
+    };
+
+    ffp.addDataType('uint8', ffp.uint8);
+    ffp.addDataType('uint16', ffp.uint16);
+    ffp.addDataType('uint32', ffp.uint32);
+    ffp.addDataType('int16', ffp.int16);
+    ffp.addDataType('int32', ffp.int32);
+    ffp.addDataType('float', ffp.float);
 
     ffp.addDataType('array', {
         read: (stream, entity, context) => {

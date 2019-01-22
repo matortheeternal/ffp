@@ -1,4 +1,4 @@
-let {writeEntity, addDataType} = require('../index'),
+let ffp = require('../index'),
     path = require('path'),
     fs = require('fs');
 
@@ -12,7 +12,7 @@ describe('Writing Strings', () => {
     };
 
     beforeAll(() => {
-        addDataType('utf8 string', {
+        ffp.addDataType('utf8 string', {
             write: (stream, entity, data) => {
                 let buf = Buffer.concat([
                     Buffer.from(data, 'utf8'),
@@ -23,7 +23,7 @@ describe('Writing Strings', () => {
             }
         });
 
-        addDataType('pascal string', {
+        ffp.addDataType('pascal string', {
             write: (stream, entity, data) => {
                 let buf = Buffer.alloc(2 + data.length);
                 buf.writeUInt16BE(data.length);
@@ -33,7 +33,7 @@ describe('Writing Strings', () => {
             }
         });
 
-        addDataType('ucs2 string', {
+        ffp.addDataType('ucs2 string', {
             write: (stream, entity, data) => {
                 let buf = Buffer.alloc(2 * data.length + 2);
                 buf.write(data, 0, 2 * data.length, 'ucs2');
@@ -46,7 +46,7 @@ describe('Writing Strings', () => {
     });
 
     it('should parse utf8 strings', () => {
-        let output = writeEntity(stream, {
+        let output = ffp.writeEntity(stream, {
             type: 'utf8 string',
             storageKey: 'str'
         }, data);
@@ -57,7 +57,7 @@ describe('Writing Strings', () => {
     });
 
     it('should parse pascal strings', () => {
-        let output = writeEntity(stream, {
+        let output = ffp.writeEntity(stream, {
             type: 'pascal string',
             storageKey: 'pstr'
         }, data);
@@ -68,7 +68,7 @@ describe('Writing Strings', () => {
     });
 
     it('should parse ucs2 strings', () => {
-        let output = writeEntity(stream, {
+        let output = ffp.writeEntity(stream, {
             type: 'ucs2 string',
             storageKey: 'wstr'
         }, data);

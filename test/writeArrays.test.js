@@ -1,4 +1,4 @@
-let {writeEntity, addDataType, getDataType, writeArrayCount} = require('../index'),
+let ffp = require('../index'),
     path = require('path'),
     fs = require('fs');
 
@@ -12,22 +12,15 @@ describe('Writing Arrays', () => {
     };
 
     beforeAll(() => {
-        addDataType('uint16', {
-            write: (stream, entity, data) => {
-                let buf = Buffer.alloc(2);
-                buf.writeUInt16BE(data);
-                stream.write(buf);
-                return buf;
-            }
-        });
+        ffp.setEndianness('BE');
 
         // using special array type here so we can test the
         // output buffer without having to read the file
-        addDataType('test array', {
+        ffp.addDataType('test array', {
             write: (stream, entity, data) => {
                 let buffers = [],
-                    countBuf = writeArrayCount(stream, entity, data),
-                    entryType = getDataType(entity.entry.type);
+                    countBuf = ffp.writeArrayCount(stream, entity, data),
+                    entryType = ffp.getDataType(entity.entry.type);
                 if (countBuf) buffers.push(countBuf);
                 if (!entryType)
                     throw new Error(`Data type ${entity.entry.type} not found.`);
@@ -37,7 +30,7 @@ describe('Writing Arrays', () => {
             }
         });
 
-        addDataType('pascal string', {
+        ffp.addDataType('pascal string', {
             write: (stream, entity, data) => {
                 let buf = Buffer.alloc(2 + data.length);
                 buf.writeUInt16BE(data.length);
@@ -58,7 +51,7 @@ describe('Writing Arrays', () => {
     };
 
     it('should work with inline count', () => {
-        let output = writeEntity(stream, {
+        let output = ffp.writeEntity(stream, {
             type: 'test array',
             count: {type: 'uint16'},
             entry: {type: 'uint16'},
@@ -83,13 +76,13 @@ describe('Writing Arrays', () => {
     };
 
     it('should work with countKey', () => {
-        let output = writeEntity(stream, {
+        let output = ffp.writeEntity(stream, {
             type: 'uint16',
             storageKey: 'stringCount'
         }, data);
         expect(output.readUInt16BE()).toBe(6);
 
-        output = writeEntity(stream, {
+        output = ffp.writeEntity(stream, {
             type: 'test array',
             countKey: 'stringCount',
             entry: {type: 'pascal string'},

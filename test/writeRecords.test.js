@@ -1,5 +1,4 @@
-let {writeEntity, writeArrayCount, addDataType,
-        getDataType, addDataFormat, getDataFormat} = require('../index'),
+let ffp = require('../index'),
     path = require('path'),
     fs = require('fs');
 
@@ -23,9 +22,11 @@ describe('Writing Records', () => {
     };
 
     beforeAll(() => {
+        ffp.setEndianness('BE');
+
         // using special uint8 type here so we can test the
         // output buffer without having to read the file
-        addDataType('test uint8', {
+        ffp.addDataType('test uint8', {
             write: (stream, entity, data) => {
                 let buf = Buffer.alloc(1);
                 buf.writeUInt8(data);
@@ -34,16 +35,7 @@ describe('Writing Records', () => {
             }
         });
 
-        addDataType('uint16', {
-            write: (stream, entity, data) => {
-                let buf = Buffer.alloc(2);
-                buf.writeUInt16BE(data);
-                stream.write(buf);
-                return buf;
-            }
-        });
-
-        addDataType('pascal string', {
+        ffp.addDataType('pascal string', {
             write: (stream, entity, data) => {
                 let buf = Buffer.alloc(2 + data.length);
                 buf.writeUInt16BE(data.length);
@@ -55,11 +47,11 @@ describe('Writing Records', () => {
 
         // using special array type here so we can test the
         // output buffer without having to read the file
-        addDataType('test array', {
+        ffp.addDataType('test array', {
             write: (stream, entity, data) => {
                 let buffers = [],
-                    countBuf = writeArrayCount(stream, entity, data),
-                    entryType = getDataType(entity.entry.type);
+                    countBuf = ffp.writeArrayCount(stream, entity, data),
+                    entryType = ffp.getDataType(entity.entry.type);
                 if (countBuf) buffers.push(countBuf);
                 if (!entryType)
                     throw new Error(`Data type ${entity.entry.type} not found.`);
@@ -73,26 +65,26 @@ describe('Writing Records', () => {
             let buffers = [];
             if (schema.constructor === Array) {
                 schema.forEach(entity => {
-                    buffers.push(writeEntity(stream, entity, data));
+                    buffers.push(ffp.writeEntity(stream, entity, data));
                 });
             } else {
-                buffers.push(writeEntity(stream, schema, data));
+                buffers.push(ffp.writeEntity(stream, schema, data));
             }
             return Buffer.concat(buffers);
         };
 
         // using special record type here so we can test the
         // output buffer without having to read the file
-        addDataType('test record', {
+        ffp.addDataType('test record', {
             write: (stream, entity, data) => {
-                let format = getDataFormat(entity.format);
+                let format = ffp.getDataFormat(entity.format);
                 if (!format)
                     throw new Error(`Data format ${entity.format} not found.`);
                 return writeSchema(stream, format, data);
             }
         });
 
-        addDataFormat('Person', [{
+        ffp.addDataFormat('Person', [{
             type: 'pascal string',
             storageKey: 'name'
         }, {
@@ -114,22 +106,18 @@ describe('Writing Records', () => {
         let people = [],
             i = 2;
         while (i < buf.length) {
-            let len = buf.slice(i, i + 2).readUInt16BE();
-            i += 2;
-            let name = buf.slice(i, i + len).toString('ascii');
-            i += len;
-            let gender = buf.slice(i, i + 1).readUInt8();
+            let len = buf.slice(i, i += 2).readUInt16BE();
+            let name = buf.slice(i, i += len).toString('ascii');
+            let gender = buf.slice(i, i += 1).readUInt8();
             gender = gender === 1 ? 'male' : 'female';
-            i += 1;
-            let age = buf.slice(i, i + 2).readUInt16BE();
-            i += 2;
+            let age = buf.slice(i, i += 2).readUInt16BE();
             people.push({ name, gender, age });
         }
         return people;
     };
 
     it('should write arrays of records', () => {
-        let output = writeEntity(stream, {
+        let output = ffp.writeEntity(stream, {
             type: 'test array',
             count: {type: 'uint16'},
             entry: {type: 'test record', format: 'Person'},

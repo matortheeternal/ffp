@@ -1,4 +1,4 @@
-let {parseFile, writeFile, addDataType, getDataFormat, addDataFormat} = require('../index'),
+let ffp = require('../index'),
     fs = require('fs'),
     path = require('path');
 
@@ -9,7 +9,9 @@ describe('Writing Files', () => {
     const icoMagic = 0x00000100;
 
     beforeAll(() => {
-        addDataType('uint32', {
+        ffp.setEndianness('LE');
+
+        ffp.addDataType('uint32be', {
             read: stream => stream.read(4).readUInt32BE(),
             write: (stream, entity, data) => {
                 let buf = Buffer.alloc(4);
@@ -18,27 +20,9 @@ describe('Writing Files', () => {
             }
         });
 
-        addDataType('uint32le', {
-            read: stream => stream.read(4).readUInt32LE(),
-            write: (stream, entity, data) => {
-                let buf = Buffer.alloc(4);
-                buf.writeUInt32LE(data);
-                stream.write(buf);
-            }
-        });
-
-        addDataType('uint16le', {
-            read: stream => stream.read(2).readUInt16LE(),
-            write: (stream, entity, data) => {
-                let buf = Buffer.alloc(2);
-                buf.writeUInt16LE(data);
-                stream.write(buf);
-            }
-        });
-
         const PNG_HEADER = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
 
-        addDataType('image blobs', {
+        ffp.addDataType('image blobs', {
             read: (stream, entity, store) => {
                 store.images.forEach(image => {
                     image.img = stream.read(image.len_img);
@@ -54,7 +38,7 @@ describe('Writing Files', () => {
             }
         });
 
-        addDataFormat('IconDirEntry', [{
+        ffp.addDataFormat('IconDirEntry', [{
             type: 'uint8',
             storageKey: 'width'
         }, {
@@ -67,27 +51,27 @@ describe('Writing Files', () => {
             type: 'uint8',
             storageKey: 'reserved'
         }, {
-            type: 'uint16le',
+            type: 'uint16',
             storageKey: 'num_planes'
         }, {
-            type: 'uint16le',
+            type: 'uint16',
             storageKey: 'bpp'
         }, {
-            type: 'uint32le',
+            type: 'uint32',
             storageKey: 'len_img'
         }, {
-            type: 'uint32le',
+            type: 'uint32',
             storageKey: 'ofs_img'
         }]);
 
-        addDataFormat('ico', [{
-            type: 'uint32',
+        ffp.addDataFormat('ico', [{
+            type: 'uint32be',
             expectedValue: icoMagic,
             errorMessage: 'ICO magic does not match.',
             storageKey: 'magic'
         }, {
             type: 'array',
-            count: {type: 'uint16le'},
+            count: {type: 'uint16'},
             entry: {type: 'record', format: 'IconDirEntry'},
             storageKey: 'images'
         }, {
@@ -97,8 +81,8 @@ describe('Writing Files', () => {
     });
 
     it('should read and write binary-identical icon files', () => {
-        let iconFile = parseFile(inputPath, 'ico');
-        writeFile(outputPath, 'ico', iconFile);
+        let iconFile = ffp.parseFile(inputPath, 'ico');
+        ffp.writeFile(outputPath, 'ico', iconFile);
         let input = fs.readFileSync(inputPath),
             output = fs.readFileSync(outputPath);
         expect(input).toBeDefined();

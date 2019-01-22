@@ -1,4 +1,4 @@
-let {writeEntity, addDataType} = require('../index'),
+let ffp = require('../index'),
     path = require('path'),
     fs = require('fs');
 
@@ -8,7 +8,7 @@ describe('Writing Bytes', () => {
     let stream, data = { bytes: 0x12345678 };
 
     beforeAll(() => {
-        addDataType('bytes', {
+        ffp.addDataType('bytes', {
             write: (stream, entity, data) => {
                 let buf = Buffer.alloc(4);
                 buf.writeUInt32BE(data);
@@ -21,7 +21,7 @@ describe('Writing Bytes', () => {
     });
 
     it('should write the bytes to disk', () => {
-        let output = writeEntity(stream, {
+        let output = ffp.writeEntity(stream, {
             type: 'bytes',
             storageKey: 'bytes'
         }, data);

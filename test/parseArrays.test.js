@@ -1,4 +1,4 @@
-let {parseEntity, addDataType, getDataType} = require('../index'),
+let ffp = require('../index'),
     path = require('path'),
     fs = require('fs');
 
@@ -8,14 +8,11 @@ describe('Parsing Arrays', () => {
     let stream, store = {};
 
     beforeAll(done => {
-        addDataType('uint16', {
-            read: stream => stream.read(2).readUInt16BE()
-        });
+        ffp.setEndianness('BE');
 
-        addDataType('pascal string', {
+        ffp.addDataType('pascal string', {
             read: stream => {
-                let uint16 = getDataType('uint16'),
-                    len = uint16.read(stream);
+                let len = ffp.uint16.read(stream);
                 return stream.read(len).toString('ascii');
             }
         });
@@ -25,7 +22,7 @@ describe('Parsing Arrays', () => {
     });
 
     it('should work with inline count', () => {
-        parseEntity(stream, {
+        ffp.parseEntity(stream, {
             type: 'array',
             count: {type: 'uint16'},
             entry: {type: 'uint16'},
@@ -38,13 +35,13 @@ describe('Parsing Arrays', () => {
     });
 
     it('should work with countKey', () => {
-        parseEntity(stream, {
+        ffp.parseEntity(stream, {
             type: 'uint16',
             storageKey: 'stringCount'
         }, store);
         expect(store.stringCount).toBe(6);
 
-        parseEntity(stream, {
+        ffp.parseEntity(stream, {
             type: 'array',
             countKey: 'stringCount',
             entry: {type: 'pascal string'},

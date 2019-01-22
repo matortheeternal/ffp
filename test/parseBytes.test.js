@@ -1,4 +1,4 @@
-let {parseEntity, addDataType} = require('../index'),
+let ffp = require('../index'),
     path = require('path'),
     fs = require('fs');
 
@@ -8,7 +8,7 @@ describe('Parsing Bytes', () => {
     let stream, store = {};
 
     beforeAll(done => {
-        addDataType('bytes', {
+        ffp.addDataType('bytes', {
             read: stream => stream.read(4)
         });
 
@@ -17,7 +17,7 @@ describe('Parsing Bytes', () => {
     });
 
     it('should read the bytes into a buffer', () => {
-        parseEntity(stream, {
+        ffp.parseEntity(stream, {
             type: 'bytes',
             storageKey: 'bytes'
         }, store);
