@@ -15,7 +15,7 @@ class SyncReadableStream {
     }
 
     getRemainingBytes() {
-        return this._fileSize - this._pos;
+        return this._buffer.length - this._pos;
     }
 }
 
