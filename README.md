@@ -9,7 +9,7 @@ The primary goal of `ffp` is to make it easy to make file format parsers and wri
 
 ```
 npm i file-format-parser --save
-``` 
+```
 
 ## usage
 
@@ -108,7 +108,7 @@ Sets the [endianness](https://en.wikipedia.org/wiki/Endianness) to be used by en
 **Arguments:**
 - `endianness` - `'LE'` for Little Endian or `'BE'` for Big Endian.
 
-### `ffp.parseFile(filePath, schema, cb)`
+### `ffp.parseFile(filePath, schema)`
 
 Loads and parses the file at `filePath` according to `schema`.  Returns the parsed data once parsing is completed.
 
@@ -169,4 +169,5 @@ Adds a data format to `ffp`.
 Gets a data format from `ffp` matching `name`.  Returns the data format if found.
 
 **Arguments:**  
+
 - `name` - Unique string identifier of the data format to get.
