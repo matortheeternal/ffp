@@ -1,9 +1,13 @@
 {
   "name": "file-format-parser",
   "description": "File format parser which makes it easy to parse binary file formats through data schemas.",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "author": "Mator",
   "homepage": "https://github.com/matortheeternal/ffp#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/matortheeternal/ffp.git"
+  },
   "main": "index.js",
   "license": "MIT",
   "keywords": [
@@ -26,7 +30,7 @@
   },
   "devDependencies": {
     "codecov": "^3.0.2",
-    "jest": "^23.1.0",
+    "jest": "^24.8.0",
     "merge": "^1.2.1"
   },
   "dependencies": {}
