@@ -116,7 +116,7 @@ Loads and parses the file at `filePath` according to `schema`.  Returns the pars
 - `filePath` - Path to the file to load and parse.
 - `schema` - Name of the schema to use when parsing the file or the schema itself.
 
-### `ffp.writeFile`
+### `ffp.writeFile(filePath, schema, data)`
 
 Writes a file to `filePath` according to `schema` and `data`.
 
@@ -125,7 +125,7 @@ Writes a file to `filePath` according to `schema` and `data`.
 - `schema` - Name of the schema to use when parsing the file or the schema itself.
 - `data` - Data structure to write to disk.  Should have every property expected by the `schema`.
 
-### `ffp.addDataType`
+### `ffp.addDataType(name, type)`
 
 Adds a data type to `ffp`.
 
@@ -135,7 +135,7 @@ Adds a data type to `ffp`.
     - `read` - [Data reader function](#data-reader-function) called to read the data type from a stream.
     - `write` - [Data writer function](#data-writer-function) called to write the data type to the stream.
 
-### `ffp.addEndianType`
+### `ffp.addEndianType(name, endianType)`
 
 Adds an endian data type to `ffp`.
 
@@ -149,14 +149,14 @@ Adds an endian data type to `ffp`.
         - `LE` - [Data writer function](#data-writer-function) called to write data to the stream in little endian byte order.
         - `BE` - [Data writer function](#data-writer-function) called to write data to the stream in big endian byte order.
 
-### `ffp.getDataType`
+### `ffp.getDataType(name)`
 
 Gets a data type from `ffp` matching `name`.  Returns the data type if found.
 
 **Arguments:**  
 - `name` - Unique string identifier of the data type to get.
 
-### `ffp.addDataFormat`
+### `ffp.addDataFormat(name, format)`
 
 Adds a data format to `ffp`.
 
@@ -164,7 +164,7 @@ Adds a data format to `ffp`.
 - `name` - Unique string identifier for the data format.
 - `format` - Schema array, as described in the [schemas section](#schemas).
 
-### `ffp.getDataFormat`
+### `ffp.getDataFormat(name)`
 
 Gets a data format from `ffp` matching `name`.  Returns the data format if found.
 
